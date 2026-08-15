@@ -1,0 +1,25 @@
+Starting benchmark
+  target      : http://127.0.0.1:8080/
+  method      : GET
+  concurrency : 100
+  mode        : requests=350000
+  warmup      : 10
+
+=== HTTP Server Benchmark Results ===
+Elapsed time     : 26.743 s
+Total requests   : 350000
+Successful       : 350000
+Failed           : 0
+Requests/sec     : 13087.39
+Throughput       : 2.77 MiB/s received
+Bytes received   : 77,700,000
+
+Latency (ms)
+  min            : 0.12
+  mean           : 7.61
+  median         : 6.72
+  stdev          : 8.92
+  p95            : 12.28
+  p99            : 27.23
+  max            : 382.73
+=====================================

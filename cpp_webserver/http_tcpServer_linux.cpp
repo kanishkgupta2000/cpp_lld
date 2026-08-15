@@ -1,8 +1,13 @@
 #include "http_tcpServer_linux.h"
 #include "rest_pipeline.h"
+#include "server_config.h"
 #include<iostream>
 #include<sstream>
 #include<unistd.h>
+#include <spdlog/spdlog.h>
+
+#include <boost/asio/thread_pool.hpp>
+#include <boost/asio/post.hpp>
 
 /*
 Recap :: is the scope resolution operator
@@ -24,26 +29,21 @@ namespace {
     What does it mean?
     "These functions are private to this .cpp file"
     */
+    boost::asio::thread_pool pool(16);
 
     const int BUFFER_SIZE = 30720;
     const bool silentMode = true;
-    void log(const std::string &message)
-    {
-        if(!silentMode)
-        std::cout<<message<<std::endl;
-    }
-
     void exitWithError(const std::string &errorMessage)
     {
-        log("ERROR: " + errorMessage);
+        spdlog::error("ERROR: " + errorMessage);
         exit(1);
     }
 }
 
 namespace http{
-    TcpServer::TcpServer(std::string ip_address, int port): m_ip_address(ip_address),
-     m_port(port), m_socket(), m_new_socket(), m_incomingMessage(), m_socketAddress(),
-     m_socketAddress_len(sizeof(m_socketAddress)), m_serverMessage()
+    TcpServer::TcpServer(const ServerConfig &config): m_ip_address(config.host), m_port(config.port),
+     m_run_sequential(config.run_sequential), m_socket(), m_new_socket(), m_incomingMessage(),
+     m_socketAddress(), m_socketAddress_len(sizeof(m_socketAddress)), m_serverMessage()
     {
         m_socketAddress.sin_family = AF_INET;
         m_socketAddress.sin_port = htons(m_port);
@@ -52,7 +52,7 @@ namespace http{
         {
             std::ostringstream ss;
             ss << "Failed to start server with PORT: " << ntohs(m_socketAddress.sin_port);
-            log(ss.str());
+            spdlog::critical(ss.str());
         }
     }
     
@@ -94,37 +94,53 @@ namespace http{
         }
         std::ostringstream ss;
         ss << "\n*** Listening on ADDRESS: " << inet_ntoa(m_socketAddress.sin_addr) << " PORT: " << ntohs(m_socketAddress.sin_port) << " ***\n\n";
-        log(ss.str());
-
-        int bytesReceived;
+        spdlog::info(ss.str());
 
         while(true)
         {
-            log("=====Waiting for a new connection ===== \n\n");
+            spdlog::info("=====Waiting for a new connection ===== \n\n");
             acceptConnection(m_new_socket);
-            char buffer[BUFFER_SIZE] = {0};
-            bytesReceived = read(m_new_socket, buffer, BUFFER_SIZE);
-            if (bytesReceived < 0)
-            {
-                exitWithError("Failed to read bytes from client socket connection");
-            }
+            int client_socket = m_new_socket;
 
-            std::ostringstream ss;
+            if (m_run_sequential)
+            {
+                process_request(client_socket);
+            }
+            else
+            {
+                boost::asio::post(pool, [this, client_socket]()
+                              { 
+                                process_request(client_socket);
+                             });
+            }
+            
+        }
+    }
+
+    void TcpServer::process_request(int client_socket)
+    {
+        char buffer[BUFFER_SIZE] = {0};
+        int bytesReceived = read(client_socket, buffer, BUFFER_SIZE);
+        if (bytesReceived < 0)
+        {
+            exitWithError("Failed to read bytes from client socket connection");
+        }
+
+        std::ostringstream ss;
 
             ss << "------ Received Request from client ------\n\n";
-            log(ss.str());
-            std::string content(buffer);
-            log("buffer is: \n" + content);
+            spdlog::info(ss.str());
+        std::string content(buffer);
+        spdlog::info("buffer is: \n" + content);
 
-            Rest::RestExecutor executor(content);
-            std::string response =  executor.ExecuteQuery();
-            log (response);
-            std::string builtResponse = buildResponse(response);
+        Rest::RestExecutor executor(content);
+        std::string response = executor.ExecuteQuery();
+        spdlog::info (response);
+        std::string builtResponse = buildResponse(response);
 
-            sendResponse(builtResponse);
+        sendResponse(builtResponse, client_socket);
 
-            close(m_new_socket);
-        }
+        close(client_socket);
     }
 
     void TcpServer::acceptConnection(int &new_socket)
@@ -152,19 +168,19 @@ namespace http{
         return ss.str();
     }
 
-    void TcpServer::sendResponse(std::string &message)
+    void TcpServer::sendResponse(std::string &message, int socket)
     {
         long bytesSent;
 
-        bytesSent = write(m_new_socket, message.c_str(), message.size());
+        bytesSent = write(socket, message.c_str(), message.size());
 
         if (bytesSent == message.size())
         {
-            log("------ Server Response sent to client ------\n\n");
+            spdlog::info("------ Server Response sent to client ------\n\n");
         }
         else
         {
-            log("Error sending response to client");
+            spdlog::error("Error sending response to client");
         }
     }
 } // namespace http

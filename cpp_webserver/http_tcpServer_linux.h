@@ -17,16 +17,20 @@ Prevents double declaration of any identifiers such as types, enums and static v
 #include<stdlib.h>
 #include<string>
 
+struct ServerConfig;
+
 namespace http
 {
     class TcpServer{
         public:
-        TcpServer(std::string ip_address, int port);
+        explicit TcpServer(const ServerConfig &config);
         ~TcpServer();
         void startListen();
 
+
         // Learning: m_ is just a naming convention for naming member variables to avoid using this-> operators in case of ambiguity between ctor params and member variables
         private:
+        bool m_run_sequential;
         std::string m_ip_address;
         int m_port;
         int m_socket;
@@ -40,7 +44,8 @@ namespace http
         void closeServer();
         void acceptConnection(int &new_socket);
         std::string buildResponse(std::string &response);
-        void sendResponse(std::string &response);
+        void sendResponse(std::string &response, int socket);
+        void process_request(int client_socket);
     };
 } // namespace http
 #endif

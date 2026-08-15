@@ -7,8 +7,12 @@ benchmark request opens a fresh connection — matching real client behavior.
 
 Usage:
   1. Build and start the server (from cpp_webserver/):
-       g++ -std=c++23 -o server server_linux.cpp http_tcpServer_linux.cpp rest_pipeline.cpp
+       g++ -std=c++23 -o server server_linux.cpp server_config.cpp logging.cpp \
+           http_tcpServer_linux.cpp rest_pipeline.cpp \
+           -Ithird_party/spdlog/include
        ./server
+       ./server --sequential --log-level debug
+       ./server --silent
 
   2. Run the benchmark:
        python3 benchmark/http_benchmark.py
