@@ -1,10 +1,20 @@
-Command to run the project
+# HTTP-TCP server
+This is a simple TCP server built in C++.
 
-cpp_webserver % g++ -std=c++20 \
-  -I/opt/homebrew/opt/boost/include \
-  -I/opt/homebrew/opt/spdlog/include \
-  -I/opt/homebrew/opt/fmt/include \
-  server_linux.cpp http_tcpServer_linux.cpp rest_pipeline.cpp logging.cpp server_config.cpp  \
-  -L/opt/homebrew/opt/fmt/lib \
-  -lfmt \
-  -o server
+Credit: [Building Http server from scratch](https://osasazamegbe.medium.com/showing-building-an-http-server-from-scratch-in-c-2da7c0db6cb7)
+
+The above article provides an amazing resource to build a basic TCP server leveraging linux APIs.
+
+Extending this project to build the http request/response pipeline over the basic project.
+
+## Build steps
+in cpp_webserver folder run the following commands
+```cmake
+cmake -S . -B build
+cmake --build build
+```
+Run the following for configuration:
+
+```cmake
+./build/server --help
+```
