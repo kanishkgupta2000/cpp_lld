@@ -13,7 +13,6 @@ namespace sstable{
         std::string key;
         uint64_t offset;
     };
-    
 };
 
 #endif
