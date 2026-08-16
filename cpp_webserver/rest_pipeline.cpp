@@ -16,6 +16,7 @@ namespace Rest{
         // I have m_http request
         return m_httprequest.m_method + " method called with PATH: " + m_httprequest.m_path +  " and version: " + m_httprequest.m_version;
     }
+
     int RestExecutor::ParseContent()
     {
         // original content converted to HttpRequest
