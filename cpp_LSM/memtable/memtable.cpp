@@ -5,7 +5,7 @@ using namespace sstable;
 
 namespace memtable
 {
-    MemTable::MemTable(std::string file_path, uint32_t threshold, uint32_t sstable_block_size): m_threshold(threshold), m_map(), ss_table_writer(sstable_block_size), m_file_path(file_path)
+    MemTable::MemTable(std::string file_path, uint32_t threshold, uint32_t sstable_block_size): m_threshold(threshold), m_map(), ss_table_writer(sstable_block_size), m_file_path(file_path), m_size(0)
     {
 
     }
@@ -14,17 +14,16 @@ namespace memtable
     {
     }
 
-
     void MemTable::put(std::string key, std::string value)
     {
         m_map[std::string(key)] = sstable::Record(key, value, false);
-        size++;
+        m_size++;
     }
 
     void MemTable::deleteKey(std::string key)
     {
         m_map[std::string(key)] = sstable::Record(key, NULL, true);
-        size++;
+        m_size++;
     }
 
     MemTableReadResult MemTable::read(std::string key)

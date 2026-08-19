@@ -25,13 +25,16 @@ namespace memtable{
         void deleteKey(std::string key);
         MemTableReadResult read(std::string key);
         void writeSSTable();
+        bool MemTable::isFull(){
+            return m_size >= m_threshold;
+        }
 
         private:
         sstable::SSTableWriter ss_table_writer;
         std::string m_file_path;
         uint32_t m_threshold;
         std::map<std::string, sstable::Record> m_map;
-        uint32_t size;
+        uint32_t m_size;
     };
 };
 
