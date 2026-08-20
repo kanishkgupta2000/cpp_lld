@@ -6,3 +6,9 @@
 4. As soon as we start writing the memtable to disk, a new memtable starts taking writes.
 5. Once the memtable writing is complete, we free the original memtable's memory.
 6. In background merging and compacting process
+
+
+Command to test memtable file
+```cpp
+g++ -std=c++23 memtable.cpp -I../sstable/sstable.h  -o memtable_test 
+```

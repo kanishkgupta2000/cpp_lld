@@ -22,7 +22,7 @@ namespace memtable
 
     void MemTable::deleteKey(std::string key)
     {
-        m_map[std::string(key)] = sstable::Record(key, NULL, true);
+        m_map[std::string(key)] = sstable::Record(key, "", true);
         m_size++;
     }
 
@@ -59,4 +59,19 @@ namespace memtable
     }
 };
 
-int main(){}
+// int main(){
+//     memtable::MemTable mem("data.bin", 8, 4);
+//     mem.put("a", "apple");
+//     mem.put("b", "ball");
+//     mem.put("c", "cat");
+//     mem.put("d", "dog");
+//     mem.put("e", "elephant");
+//     mem.put("f", "football");
+//     mem.put("g", "game");
+//     mem.put("h", "hand");
+
+//     if (mem.isFull())
+//     {
+//         mem.writeSSTable();
+//     }
+// }

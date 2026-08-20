@@ -29,6 +29,11 @@ namespace sstable{
         {
         }
         
+        std::string get_file_path() const
+        {
+            return m_file_path;
+        }
+
         Record get_key(std::string_view key)
         {
             int lo = 0;
@@ -65,8 +70,10 @@ namespace sstable{
                 }
             }
         
-            return Record("", NULL);
-        }        private:
+            return Record("", "", false);
+        }       
+        
+        private:
         std::string m_file_path;
         std::vector<IndexEntry> sparse_index;
 

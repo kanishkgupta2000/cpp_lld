@@ -25,8 +25,12 @@ namespace memtable{
         void deleteKey(std::string key);
         MemTableReadResult read(std::string key);
         void writeSSTable();
-        bool MemTable::isFull(){
+        bool isFull(){
             return m_size >= m_threshold;
+        }
+        std::string get_file_path() const
+        {
+        return m_file_path;
         }
 
         private:
