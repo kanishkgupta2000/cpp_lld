@@ -35,6 +35,8 @@ namespace storage_engine{
             std::shared_ptr<memtable::MemTable> immutable_memtable;
             std::vector<sstable::SSTable> sstables;
             std::mutex memtable_mutex;
+            std::mutex mutex;
+
 
             std::vector<std::string> get_sstable_files()
             {

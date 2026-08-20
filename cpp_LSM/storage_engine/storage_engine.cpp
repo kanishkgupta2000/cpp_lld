@@ -4,10 +4,59 @@ namespace storage_engine{
         
     memtable::MemTableReadResult StorageEngine::read(std::string key)
     {
-        // check active memtable
-        // check immutable memtable if present 
-        // start checking sstables recursively down to the last one
+        // Take a snapshot of the current storage state.
+        std::shared_ptr<memtable::MemTable> active;
+        std::shared_ptr<memtable::MemTable> immutable;
+        std::vector<sstable::SSTable> tables;
+    
+        {
+            std::lock_guard<std::mutex> lock(mutex);
+    
+            active = active_memtable;
+            immutable = immutable_memtable;
+            tables = sstables;
+        }
+    
+        // 1. Check active memtable
+        auto active_result = active->read(key);
+        if (active_result.status != memtable::NOT_FOUND)
+        {
+            return active_result;
+        }
+    
+        // 2. Check immutable memtable if present
+        if (immutable)
+        {
+            auto immutable_result = immutable->read(key);
+    
+            if (immutable_result.status != memtable::NOT_FOUND)
+            {
+                return immutable_result;
+            }
+        }
+    
+        // 3. Check SSTables from newest to oldest
+        for (int i = tables.size() - 1; i >= 0; i--)
+        {
+            auto ss_table_result = tables[i].get_key(key);
+    
+            if (ss_table_result.key == key)
+            {
+                return memtable::MemTableReadResult(
+                    ss_table_result,
+                    ss_table_result.is_deletion
+                        ? memtable::DELETED
+                        : memtable::FOUND
+                );
+            }
+        }
+    
+        return memtable::MemTableReadResult(
+            sstable::Record(),
+            memtable::NOT_FOUND
+        );
     }
+    
     void StorageEngine::put(std::string key, std::string value)
     {
         std::shared_ptr<memtable::MemTable> immutable;
@@ -86,7 +135,6 @@ namespace storage_engine{
                 immutable_memtable.reset();
         }).detach();
     }
-
 }
 
 int main()

@@ -29,7 +29,7 @@ namespace sstable{
         {
         }
         
-        std::string get_key(std::string_view key)
+        Record get_key(std::string_view key)
         {
             int lo = 0;
             int hi = sparse_index.size()-1; //2
@@ -61,11 +61,11 @@ namespace sstable{
                 Record record = readRecord(in);
                 if (record.key == key)
                 {
-                    return record.value;
+                    return record;
                 }
             }
         
-            return "not_found";
+            return Record("", NULL);
         }        private:
         std::string m_file_path;
         std::vector<IndexEntry> sparse_index;
